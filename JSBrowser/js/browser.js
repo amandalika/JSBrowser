@@ -61,6 +61,18 @@
 
     addEventListener("DOMContentLoaded", function () {
         // Get the UI elements
+
+        // The normal webview created via HTML is in proc.
+        // Replace it with a webview created via new MSWebView for an out of proc webview.
+        {
+            let webview = document.querySelector("#WebView");
+            const webviewParent = webview.parentElement;
+            webviewParent.removeChild(webview);
+            webview = new MSWebView();
+            webview.setAttribute("id", "WebView");
+            webviewParent.appendChild(webview);
+        }
+
         Object.assign(this, {
             "addFavButton": document.querySelector("#addFavButton"),
             "backButton": document.querySelector("#backButton"),
@@ -83,8 +95,25 @@
             "stopButton": document.querySelector("#stopButton"),
             "tweetIcon": document.querySelector("#tweet"),
             "urlInput": document.querySelector("#urlInput"),
-            "webview": document.querySelector("#WebView")
+            "webview": document.querySelector("#WebView"),
+            "webviewZoom": document.querySelector("#webviewZoom")
         });
+
+        this.applyWebviewZoom = state => {
+            const minValue = this.webviewZoom.getAttribute("min");
+            const maxValue = this.webviewZoom.getAttribute("max");
+            const scaleValue = Math.max(Math.min(parseInt(this.webviewZoom.value, 10), maxValue), minValue) / 100;
+
+            // Use setAttribute so they all change together to avoid weird visual glitches
+            this.webview.setAttribute("style", [
+                ["width", (100 / scaleValue) + "%"],
+                ["height", "calc(" + (-40 / scaleValue) + "px + " + (100 / scaleValue) + "%)"],
+                ["transform", "scale(" + scaleValue + ")"]
+            ].map(pair => pair[0] + ": " + pair[1]).join("; "));
+        };
+
+        // Apply the webview zoom immediately so we don't have to worry about duplicating CSS properties.
+        this.applyWebviewZoom();
 
         // Apply the fullscreen mode
         this.applyFullscreenMode = state => {
@@ -207,6 +236,9 @@
 
         // Listen for a change in fullscreen mode
         this.appView.addEventListener("visibleboundschanged", () => this.applyFullscreenMode());
+
+        // Listen for the webview zoom control changes.
+        this.webviewZoom.addEventListener("change", () => this.applyWebviewZoom());
 
         // Listen for a click on the skewed container to close the menu
         this.container.addEventListener("click", () => this.closeMenu());

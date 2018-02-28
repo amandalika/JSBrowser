@@ -234,8 +234,7 @@ html {
 }
 
 #WebView {
-    width: 100%;
-    height: calc(100% - 40px);
+    transform-origin: 0% 0%;
 }
 
 .fullscreen #WebView {
