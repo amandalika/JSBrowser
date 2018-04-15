@@ -1,4 +1,4 @@
-﻿browser.on("init", function () {
+﻿browser.on("newWebview", function () {
     "use strict";
 
     const URI = Windows.Foundation.Uri;

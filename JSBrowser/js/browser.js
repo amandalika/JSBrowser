@@ -64,14 +64,7 @@
 
         // The normal webview created via HTML is in proc.
         // Replace it with a webview created via new MSWebView for an out of proc webview.
-        {
-            let webview = document.querySelector("#WebView");
-            const webviewParent = webview.parentElement;
-            webviewParent.removeChild(webview);
-            webview = new MSWebView();
-            webview.setAttribute("id", "WebView");
-            webviewParent.appendChild(webview);
-        }
+
 
         Object.assign(this, {
             "addFavButton": document.querySelector("#addFavButton"),
@@ -112,8 +105,36 @@
             ].map(pair => pair[0] + ": " + pair[1]).join("; "));
         };
 
-        // Apply the webview zoom immediately so we don't have to worry about duplicating CSS properties.
-        this.applyWebviewZoom();
+        this.replaceWebView = () => {
+            let webview = document.querySelector("#WebView");
+            // Cannot access webview.src - anything that would need to communicate with the webview process may fail
+            let oldSrc = browser.currentUrl;
+            const webviewParent = webview.parentElement;
+            webviewParent.removeChild(webview);
+            webview = new MSWebView();
+            Object.assign(this, {
+                "webview": webview
+            });
+            webview.setAttribute("id", "WebView");
+
+            // During startup our currentUrl field is blank. If the WebView has crashed 
+            // and we were on a URI then we may obtain it from this property.
+            if (browser.currentUrl && browser.currentUrl != "") {
+                this.trigger("newWebview");
+                this.navigateTo(browser.currentUrl);
+            }
+            webviewParent.appendChild(webview);
+
+            // Replace the webview with a new instance if the old one crashes.
+            webview.addEventListener("MSWebViewProcessExited", this.replaceWebView);
+
+            // Apply the webview zoom immediately so we don't have to worry about duplicating CSS properties.
+            this.applyWebviewZoom();
+        };
+
+        // Call this immediately to switch to out of proc webview.
+        this.replaceWebView();
+
 
         // Apply the fullscreen mode
         this.applyFullscreenMode = state => {
@@ -251,6 +272,7 @@
 
         // Fire event
         this.trigger("init");
+        this.trigger("newWebview");
 
         // Navigate to the start page
         this.navigateTo("https://microsoftedge.github.io/JSBrowser/");
