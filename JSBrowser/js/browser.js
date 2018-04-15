@@ -82,6 +82,7 @@
             "fullscreenButton": document.querySelector("#goFullscreen"),
             "fullscreenMessage": document.querySelector("#fullscreenMessage"),
             "hideFullscreenLink": document.querySelector("#hideFullscreen"),
+            "newTabSetting": document.querySelector("#newTabSetting"),
             "progressRing": document.querySelector(".ring"),
             "settingsButton": document.querySelector("#settingsButton"),
             "settingsMenu": document.querySelector("#settingsMenu"),
@@ -104,6 +105,22 @@
                 ["transform", "scale(" + scaleValue + ")"]
             ].map(pair => pair[0] + ": " + pair[1]).join("; "));
         };
+
+        try {
+            if (JSON.parse(localStorage["newTabSetting"])) {
+                let newTab = window.open("newTab.html?first", null, "msHideView=yes");
+                Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(newTab));
+                window.addEventListener("message", messageEvent => {
+                    if (messageEvent.data.newTab) {
+                        let newTab = window.open("newTab.html", null, "msHideView=yes");
+                        Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(newTab)).then(() => {
+                            Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(messageEvent.source));
+                        });
+                    }
+                });
+            }
+        }
+        catch (e) { }
 
         this.replaceWebView = () => {
             let webview = document.querySelector("#WebView");

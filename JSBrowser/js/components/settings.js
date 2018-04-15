@@ -47,4 +47,11 @@
         this.toggleFavMenu(false);
         this.openMenu();
     });
+
+    this.newTabSetting.addEventListener("click", () => {
+        localStorage["newTabSetting"] = JSON.stringify(this.newTabSetting.checked);
+    });
+    if (localStorage["newTabSetting"]) {
+        this.newTabSetting.checked = JSON.parse(localStorage["newTabSetting"]);
+    }
 });
