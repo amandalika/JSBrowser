@@ -11,12 +11,15 @@
     function Browser() {
         this[EVENT_SYMBOL] = {};
         this.currentUrl = "";
+        this.lastCrashUrl = "";
+        this.lastCrashUrlCrashCount = 0;
         this.faviconLocs = new Map;
         this.favorites = new Map;
         this.loading = false;
         this.isFullscreen = false;
         this.roamingFolder = Windows.Storage.ApplicationData.current.roamingFolder;
         this.appView = Windows.UI.ViewManagement.ApplicationView.getForCurrentView();
+        this.startPage = "https://microsoftedge.github.io/JSBrowser/";
     }
 
     Browser.prototype = {
@@ -143,7 +146,22 @@
             webviewParent.appendChild(webview);
 
             // Replace the webview with a new instance if the old one crashes.
-            webview.addEventListener("MSWebViewProcessExited", this.replaceWebView);
+            webview.addEventListener("MSWebViewProcessExited", () => {
+                if (browser.currentUrl === browser.lastCrashUrl) {
+                    ++browser.lastCrashUrlCrashCount;
+                }
+                else {
+                    browser.lastCrashUrl = browser.currentUrl;
+                    browser.lastCrashUrlCrashCount = 1;
+                }
+                // If we crash again and again on the same URI, maybe stop trying to load that URI.
+                if (browser.lastCrashUrlCrashCount >= 3) {
+                    browser.lastCrashUrl = "";
+                    browser.lastCrashUrlCrashCount = 0;
+                    browser.currentUrl = browser.startPage;
+                }
+                this.replaceWebView();
+            });
 
             // Apply the webview zoom immediately so we don't have to worry about duplicating CSS properties.
             this.applyWebviewZoom();
@@ -292,7 +310,7 @@
         this.trigger("newWebview");
 
         // Navigate to the start page
-        this.navigateTo("https://microsoftedge.github.io/JSBrowser/");
+        this.navigateTo(this.startPage);
     }.bind(browser));
 
     // Export `browser`
