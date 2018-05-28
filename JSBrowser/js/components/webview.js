@@ -3,6 +3,30 @@
 
     const URI = Windows.Foundation.Uri;
 
+    // At times knowing only the current navigation event firing from the webview is not enough.
+    // It is sometimes useful to know all of the navigation events that have fired for the current navigation.
+    // This class aims to keep track of all the navigation events for the current navigation. It holds on to
+    // the event args for all the following:
+    //      MSWebViewNavigationStarting
+    //      MSWebViewContentLoading
+    //      MSWebViewDOMContentLoaded
+    //      MSWebViewNavigationCompleted
+    // Because of a peculiarity of webview navigation events, it is possible to get 2 NavigationCompleted
+    // events. In the case of a navigation failure in which the HTTP server still returns web content, for
+    // instance, we navigate to a page that doesn't exist on an HTTP server and it returns a fancy 404 page,
+    // we will see the following navigation events:
+    //      MSWebViewNavigationStarting
+    //      MSWebViewNavigationCompleted { isSuccess: false, webErrorStatus: 404 }
+    //      MSWebViewContentLoading
+    //      MSWebViewDOMContentLoaded
+    //      MSWebViewNavigationCompleted { isSuccess: true }
+    // But in the case of a navigation to a URI that contains a hostname for a server that doesn't exist
+    // we will only get one NavigationCompleted error:
+    //      MSWebViewNavigationStarting
+    //      MSWebViewNavigationCompleted { isSuccess: false, webErrorStatus: 404 }
+    // Note that its also weird that we get a 404 when there is no server.
+    // This class additionally exposes an aggregateNavigationCompleted event that fires after the last
+    // NavigationCompleted event.
     function NavigationEventState(webview) {
         const eventNameToHandlersMap = {};
         this.addEventListener = (name, handler) => {
@@ -49,6 +73,10 @@
             const matchId = this.id;
             if (!this.navigationCompleted1) {
                 this.navigationCompleted1 = e;
+                // In the case of failure and no content loading we don't know if this is because we failed
+                // to navigate before getting content or because webview is firing the completed event for the
+                // first time before getting the web content of the web server's error message. So we wait
+                // a moment for the webview to fire ContentLoading.
                 if (!e.isSuccess && !this.contentLoading) {
                     setTimeout(() => {
                         if (matchId === this.id && !this.contentLoading) {
