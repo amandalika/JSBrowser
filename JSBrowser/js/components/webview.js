@@ -3,6 +3,88 @@
 
     const URI = Windows.Foundation.Uri;
 
+    function NavigationEventState(webview) {
+        const eventNameToHandlersMap = {};
+        this.addEventListener = (name, handler) => {
+            if (!eventNameToHandlersMap.hasOwnProperty(name)) {
+                eventNameToHandlersMap[name] = [handler];
+            }
+            else {
+                eventNameToHandlersMap[name].push(handler);
+            }
+        };
+        this.removeEventListener = (name, handler) => {
+            const handlersList = eventNameToHandlersMap[name];
+            handlersList.splice(handlersList.indexOf(handler), 1);
+        };
+        const dispatch = (name, args) => {
+            eventNameToHandlersMap[name].forEach(handler => handler.call(null, args));
+        };
+
+        this.id = 0;
+        const init = () => {
+            ++this.id;
+            this.navigationStarting = null;
+            this.contentLoading = null;
+            this.domContentLoaded = null;
+            this.navigationCompleted1 = null;
+            this.navigationCompleted2 = null;
+        };
+        init();
+
+        webview.addEventListener("MSWebViewNavigationStarting", e => {
+            init();
+            this.navigationStarting = e;
+        });
+
+        webview.addEventListener("MSWebViewContentLoading", e => {
+            this.contentLoading = e;
+        })
+
+        webview.addEventListener("MSWebViewDOMContentLoaded", e => {
+            this.domContentLoaded = e;
+        });
+
+        webview.addEventListener("MSWebViewNavigationCompleted", e => {
+            const matchId = this.id;
+            if (!this.navigationCompleted1) {
+                this.navigationCompleted1 = e;
+                if (!e.isSuccess && !this.contentLoading) {
+                    setTimeout(() => {
+                        if (matchId === this.id && !this.contentLoading) {
+                            // Now we trust the navigation completed event
+                            dispatch("aggregateNavigationCompleted", {
+                                uri: this.navigationCompleted1.uri,
+                                isSuccess: this.navigationCompleted1.isSuccess,
+                                webErrorStatus: this.navigationCompleted1.webErrorStatus,
+                                hasContent: false
+                            });
+                        }
+                    }, 100);
+                }
+                else {
+                    dispatch("aggregateNavigationCompleted", {
+                        uri: e.uri,
+                        isSuccess: e.isSuccess,
+                        webErrorStatus: e.webErrorStatus,
+                        hasContent: !!this.contentLoading
+                    });
+                }
+            }
+            else {
+                this.navigationCompleted2 = e;
+                dispatch("aggregateNavigationCompleted", {
+                    uri: this.navigationCompleted1.uri,
+                    isSuccess: this.navigationCompleted1.isSuccess,
+                    webErrorStatus: e.webErrorStatus,
+                    hasContent: !!this.contentLoading
+                });
+            }
+        });
+    }
+
+    this.navigationEventState = new NavigationEventState(this.webview);
+
     // Listen for the navigation start
     this.webview.addEventListener("MSWebViewNavigationStarting", e => {
         this.loading = true;
@@ -57,6 +139,15 @@
 
         // Update the navigation state
         this.updateNavState();
+        
+    });
+
+    this.navigationEventState.addEventListener("aggregateNavigationCompleted", e => {
+        if (!e.isSuccess && !e.hasContent) {
+            this.webview.navigate("ms-appx-web:///error.html?" +
+                "uri=" + encodeURIComponent(e.uri) + "&" +
+                "webErrorStatus=" + encodeURIComponent(e.webErrorStatus));
+        }
     });
 
     // Listen for unviewable content

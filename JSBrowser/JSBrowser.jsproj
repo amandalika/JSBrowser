@@ -60,6 +60,7 @@
     </AppxManifest>
     <Content Include="css\browser.css" />
     <Content Include="default.html" />
+    <Content Include="error.html" />
     <Content Include="images\icons.png" />
     <Content Include="images\logo_150x150.png" />
     <Content Include="images\logo_310x150.png" />
@@ -77,6 +78,7 @@
     <Content Include="js\components\settings.js" />
     <Content Include="js\components\title-bar.js" />
     <Content Include="js\components\webview.js" />
+    <Content Include="js\error.js" />
     <Content Include="js\newTab.js" />
     <Content Include="newTab.html" />
   </ItemGroup>
