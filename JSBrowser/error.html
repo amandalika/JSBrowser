@@ -3,17 +3,202 @@
 <head>
     <title>Oops</title>
     <link href="css/browser.css" rel="stylesheet" />
+    <style type="text/css">
+        html,
+        body {
+            width: 100%;
+            min-width: 320px;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #333;
+        }
+
+        body {
+            display: table;
+            min-height: 780px;
+            font-family: 'Segoe UI Light', 'HelveticaNeue-Light', 'Helvetica Neue Light', Tahoma, Verdana, Arial, sans-serif;
+        }
+
+        #navbar {
+            width: 100%;
+            min-width: 320px;
+            overflow: hidden;
+            height: 50px;
+            background-color: rgba(40, 40, 40, 0.97);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        #navbar .name,
+        #navbar .link {
+            margin: 0 15px;
+            line-height: 50px;
+            font-family: 'Segoe UI', 'Helvetica', Tahoma, Verdana, Arial, sans-serif;
+            font-size: 16px;
+            display: inline-block;
+        }
+
+        #navbar .name {
+            color: #eee;
+        }
+
+        #navbar svg {
+            fill: #eee;
+            padding-right: 8px;
+            margin-bottom: 5px;
+            width: 28px;
+            height: 29px;
+            vertical-align: middle;
+        }
+
+        #navbar .link a,
+        #navbar .link a:link,
+        #navbar .link a:visited {
+            color: #aaa;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        #navbar .link a:hover {
+            color: #eee;
+            border-color: #eee;
+        }
+
+        #navbar .link a:active {
+            color: #666;
+        }
+
+        #splash {
+            padding: 20px;
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        #logo {
+            width: 250px;
+            height: 255px;
+            margin: 0 auto;
+        }
+
+        #logo svg {
+            fill: #0fff4f;
+            width: 100%;
+            height: 100%;
+        }
+
+        #title,
+        #description {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        #title {
+            font-size: 64px;
+            color: #eee;
+            margin-bottom: 10px;
+        }
+
+        #description {
+            font-size: 24px;
+            color: #aaa;
+        }
+
+        #description a,
+        #description a:link,
+        #description a:visited {
+            color: #eee;
+            text-decoration: none;
+        }
+
+        #description a:hover {
+            color: #eee;
+            border-bottom: 1px solid #eee;
+        }
+
+        #description a:active {
+            color: #aaa;
+            border-color: #aaa;
+        }
+
+        #buttons,
+        #citations {
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        #buttons a {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 10px;
+        }
+
+        #buttons a,
+        #buttons a:link,
+        #buttons a:visited {
+            font-size: 20px;
+            background-color: rgba(0, 0, 0, 0.3);
+            color: #aaa;
+            text-decoration: none;
+        }
+
+        #buttons a:hover {
+            color: #eee;
+        }
+
+        #buttons a:active {
+            color: #666;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        #citations {
+            color: #555;
+            font-family: 'Segoe UI', 'Helvetica', Tahoma, Verdana, Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        #citations a {
+            color: #555;
+        }
+        
+        #svg-template {
+            display: none;
+        }
+
+        @media screen and (max-width: 570px) {
+            #logo {
+                width: 150px;
+                height: 153px;
+            }
+            
+            #title {
+                font-size: 32px;
+            }
+
+            #description,
+            #splash #buttons a {
+                font-size: 16px;
+                font-family: 'Segoe UI', 'Helvetica', Tahoma, Verdana, Arial, sans-serif;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Oops</h1>
-    <p>There was a problem navigating to <a id="errorUri"></a> (<span id="webErrorStatus"></span>)</p>
-    <h2>Possible fixes</h2>
-    <ul>
-        <li><a id="retryUri">Retry</a></li>
-        <li><a href="ms-settings:network-status">Connect to the Internet</a></li>
-        <li><a id="searchUri">Search for <span id="searchText"></span></a></li>
-        <li><a id="archiveUri">Check Internet Archvie for previous versions</a></li>
-    </ul>
+    <div id="splash">
+        <div id="logo"></div>
+        <h1 id="title">Oops</h1>
+        <div id="description"><p>There was a problem navigating to</p><p><a id="errorUri"></a> (<span id="webErrorStatus"></span>)</p></div>
+        <div id="buttons">
+            <h2>Have you tried the following?</h2>
+            <a id="retryUri">Retry</a>
+            <a href="ms-settings:network-status">Network Settings</a>
+            <a id="searchUri">Search</a>
+            <a id="archiveUri">Internet Archive</a>
+        </div>
+    </div>
     <script src="js/error.js"></script>
 </body>
 </html>

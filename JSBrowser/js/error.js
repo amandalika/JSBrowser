@@ -18,7 +18,6 @@ const idToUri = {
     webErrorStatus: { content: query.webErrorStatus },
     retryUri: { uri: query.uri },
     searchUri: { uri: "https://www.bing.com/search?q=" + encodeURIComponent(query.uri) },
-    searchText: { content: query.uri },
     archiveUri: { uri: "https://web.archive.org/web/*/" + query.uri },
 };
 
