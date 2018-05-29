@@ -184,4 +184,41 @@
             this.navigateTo(urlInput.value.trim());
         }
     });
+
+    if (!window.opener || window.opener === window) {
+        window.addEventListener("message", messageEvent => {
+            switch (messageEvent.data.action) {
+                case "openNewTab":
+                    let newTab = window.open("default.html", null, "msHideView=yes");
+                    newTab.postMessage({ action: "navigateToUri", uri: messageEvent.data.uri }, "ms-appx://" + document.location.host);
+                    Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(newTab));
+                    break;
+
+                case "navigateToUri":
+                    this.webview.navigate(messageEvent.data.uri);
+                    break;
+
+                case "showView":
+                    Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(messageEvent.data.viewId);
+                    break;
+
+                default:
+                    throw new Error("Unknown action: " + JSON.stringify(messageEvent.data));
+                    break;
+            }
+        });
+    }
+
+    this.newTabButton.addEventListener("click", () => {
+        if (window.opener && window.opener !== window) {
+            window.opener.postMessage({
+                action: "openNewTab",
+                uri: this.webview.src
+            }, "ms-appx://" + document.location.host);
+        }
+        else {
+            let newTab = window.open("default.html");
+            newTab.postMessage({ action: "navigateToUri", uri: this.webview.src }, "ms-appx://" + document.location.host);
+        }
+    });
 });

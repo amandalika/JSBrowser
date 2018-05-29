@@ -85,6 +85,7 @@
             "fullscreenButton": document.querySelector("#goFullscreen"),
             "fullscreenMessage": document.querySelector("#fullscreenMessage"),
             "hideFullscreenLink": document.querySelector("#hideFullscreen"),
+            "newTabButton": document.querySelector("#newTabButton"),
             "newTabSetting": document.querySelector("#newTabSetting"),
             "progressRing": document.querySelector(".ring"),
             "settingsButton": document.querySelector("#settingsButton"),
