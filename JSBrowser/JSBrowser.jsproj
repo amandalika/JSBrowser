@@ -59,6 +59,7 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <Content Include="css\browser.css" />
+    <Content Include="css\theme-edge-light.css" />
     <Content Include="default.html" />
     <Content Include="error.html" />
     <Content Include="images\icons.png" />

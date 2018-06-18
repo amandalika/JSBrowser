@@ -6,6 +6,7 @@
 
     <!-- App references -->
     <link href="css/browser.css" rel="stylesheet" />
+    <link href="css/theme-edge-light.css" rel="stylesheet" />
     <script src="js/browser.js"></script>
 
     <!-- UI component references -->
@@ -21,17 +22,17 @@
         <div class="container">
             <div class="wrapper">
                 <div class="navbar">
-                    <button id="backButton" class="navButton backButton" title="Go back"></button>
-                    <button id="forwardButton" class="navButton forwardButton" title="Go forward"></button>
-                    <button id="stopButton" class="navButton stopButton" title="Stop loading"></button>
-                    <label class="icon" for="urlInput">
-                        <span class="ring"></span>
-                        <img id="favicon" src="" />
-                    </label>
-                    <div id="tweet" title="Tweet about this browser"></div>
-                    <input id="urlInput" type="text" class="win-textbox" />
-                    <button id="favButton" class="navButton favButton" title="View favorites"></button>
-                    <button id="settingsButton" class="navButton settingsButton" title="View settings"></button>
+                    <div id="controlBackground" class="fill zIndexBack"></div>
+                    <button id="backButton" class="standalonebutton depressable" title="Go back"></button>
+                    <button id="forwardButton" class="standalonebutton depressable" title="Go forward"></button>
+                    <button id="stopButton" class="standalonebutton depressable" title="Stop loading" data-state="refresh"></button>
+                    <span class="ring" id="progressRing"></span>
+                    <img id="favicon" src="" class="addressbarButton depressable" />
+                    <button id="tweet" title="Tweet about this browser" class="addressbarButton depressable"></button>
+                    <div id="addressbarBorder" class="zIndexBack fillWidth"></div>
+                    <input id="urlInput" type="text" class="win-textbox fillWidth noborder"/>
+                    <button id="favButton" class="navButton favButton standalonebutton depressable" title="View favorites"></button>
+                    <button id="settingsButton" class="navButton settingsButton standalonebutton depressable" title="View settings"></button>
                 </div>
                 <x-ms-webview id="WebView"></x-ms-webview>
             </div>
