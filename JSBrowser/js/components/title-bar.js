@@ -2,7 +2,7 @@
     "use strict";
 
     // Set your default colors
-    const BG_APP_COLOR = hexStrToRGBA("#f4f3f1");
+    const BG_APP_COLOR = hexStrToRGBA("#f2f2f2");
     const BLACK = hexStrToRGBA("#000");
     const BRAND = hexStrToRGBA("#3B3B3B");
     const GRAY = hexStrToRGBA("#666");
@@ -50,7 +50,7 @@
     }
 
     // Set the title bar colors when a menu is open
-    this.setOpenMenuAppBarColors = () => {
+    this.setDefaultAppBarColors = () => {
         Object.assign(this.titleBar, {
             "foregroundColor": BLACK,
             "backgroundColor": BG_APP_COLOR,
@@ -74,7 +74,7 @@
     };
 
     // Set the default title bar colors
-    this.setDefaultAppBarColors = () => {
+    this.setOpenMenuAppBarColors = () => {
         Object.assign(this.titleBar, {
             "foregroundColor": WHITE,
             "backgroundColor": BRAND,
