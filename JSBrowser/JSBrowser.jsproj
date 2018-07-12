@@ -80,8 +80,11 @@
     <Content Include="js\components\title-bar.js" />
     <Content Include="js\components\webview.js" />
     <Content Include="js\error.js" />
+    <Content Include="js\main.js" />
     <Content Include="js\newTab.js" />
     <Content Include="newTab.html" />
+    <Content Include="package-lock.json" />
+    <Content Include="package.json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NativeListener\NativeListener.vcxproj" />

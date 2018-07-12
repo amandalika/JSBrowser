@@ -18,4 +18,5 @@ Debug/
 NativeListener/Release/
 NativeListener/x64/
 JSBrowser/AppPackages/
+JSBrowser/node_modules
 Release/
