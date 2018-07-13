@@ -25,16 +25,17 @@
                     <div id="controlBackground" class="fill zIndexBack"></div>
                     <button id="backButton" class="standalonebutton depressable" title="Go back"></button>
                     <button id="forwardButton" class="standalonebutton depressable" title="Go forward"></button>
-                    <button id="stopButton" class="standalonebutton depressable" title="Stop loading" data-state="refresh"></button>
-                    <span class="ring" id="progressRing"></span>
-                    <img id="favicon" src="" class="addressbarButton depressable" />
+                    <button id="stopButton" class="standalonebutton depressable show" title="Stop loading" data-state="refresh"></button>
+                    <span class="ring" id="progressRing" title="refresh" hidden></span>
+                    <img id="favicon" src="images/logo_150x150.png" class="addressbarButton depressable" />
                     <button id="tweet" title="Tweet about this browser" class="addressbarButton depressable"></button>
                     <div id="addressbarBorder" class="zIndexBack fillWidth"></div>
-                    <input id="urlInput" type="text" class="win-textbox fillWidth noborder"/>
+                    <input id="urlInput" type="text" value="http://microsoftedge.github.io/JSBrowser/" class="win-textbox fillWidth noborder" />
                     <button id="favButton" class="navButton favButton standalonebutton depressable" title="View favorites"></button>
                     <button id="settingsButton" class="navButton settingsButton standalonebutton depressable" title="View settings"></button>
                 </div>
-                <x-ms-webview id="WebView"></x-ms-webview>
+                <webview id="WebView" src="http://microsoftedge.github.io/JSBrowser/"></webview>
+               
             </div>
         </div>
         <nav id="favMenu" class="outer-nav right vertical">
