@@ -1,5 +1,26 @@
 ﻿browser.on("init", function () {
     "use strict";
+    const webview = document.querySelector('webview');
+    webview.addEventListener('dom-ready', () => {
+        webview.openDevTools();
+    })
+
+    var electron, app;
+
+    function isElectron() {
+
+        if (typeof require !== 'function') return false;
+        if (typeof window !== 'object') return false;
+        try {
+            electron = require('electron');
+            app = electron.remote.app;
+        } catch (e) {
+            return false;
+        }
+        if (typeof electron !== 'object') return false;
+        return true;
+
+    }
 
     // Show the refresh button
     this.showRefresh = () => {
@@ -17,25 +38,57 @@
 
     // Listen for the stop/refresh button to stop navigation/refresh the page
     this.stopButton.addEventListener("click", () => {
-        if (this.loading) {
-            this.webview.stop();
-            this.toggleProgressRing(false);
-            this.showRefresh();
+        if (!isElectron()) {
+            if (this.loading) {
+                this.webview.stop(); // WWA-only API
+                this.toggleProgressRing(false);
+                this.showRefresh();
+            }
+            else {
+                this.webview.refesh(); // WWA-only API
+            }
         }
         else {
-            this.webview.refresh();
+            if (this.webview.isLoading()) {
+                this.stop();
+                this.toggleProgressRing(false);
+                this.showRefresh();
+            }
+            else {
+                this.webview.reload();
+            }
         }
     });
 
+
+
     // Update the navigation state
-    this.updateNavState = () => {
-        this.backButton.disabled = !this.webview.canGoBack;
-        this.forwardButton.disabled = !this.webview.canGoForward;
-    };
+    if (!isElectron()) {
+        this.updateNavState = () => {
+            this.backButton.disabled = !this.webview.canGoBack; // WWA-only API
+            this.forwardButton.disabled = !this.webview.canGoForward; // WWA-only API 
+        };
+    }
+    else {
+        this.updateNavState = () => {
+            this.backButton.disabled = !this.webview.canGoBack();
+            console.log("updating Nav");
+            this.forwardButton.disabled= !this.webview.canGoForward();
+        }
+    }
 
     // Listen for the back button to navigate backwards
-    this.backButton.addEventListener("click", () => this.webview.goBack());
-
+    if (!isElectron()) {
+        this.backButton.addEventListener("click", () => this.webview.goBack()); // WWA-only API
+    }
+    else {
+        this.backButton.addEventListener("click", () => this.webview.goBack());
+    }
     // Listen for the forward button to navigate forwards
-    this.forwardButton.addEventListener("click", () => this.webview.goForward());
+    if (!isElectron()) {
+        this.forwardButton.addEventListener("click", () => this.webview.goForward()); // WWA-only API
+    }
+    else {
+        this.forwardButton.addEventListener("click", () => this.webview.goForward());
+    }
 });

@@ -6,6 +6,22 @@
 
     // The event symbol used to store event data
     const EVENT_SYMBOL = Symbol("events");
+    var electron, app;
+
+    function isElectron() {
+
+        if (typeof require !== 'function') return false;
+        if (typeof window !== 'object') return false;
+        try {
+            electron = require('electron');
+            app = electron.remote.app;
+        } catch (e) {
+            return false;
+        }
+        if (typeof electron !== 'object') return false;
+        return true;
+
+    }
 
     // Browser constructor
     function Browser() {
@@ -17,8 +33,21 @@
         this.favorites = new Map;
         this.loading = false;
         this.isFullscreen = false;
-        this.roamingFolder = Windows.Storage.ApplicationData.current.roamingFolder;
-        this.appView = Windows.UI.ViewManagement.ApplicationView.getForCurrentView();
+
+        //If running on Electron, build Electron-specific files
+        if (isElectron()) {
+
+            this.roamingFolder = app.getPath("userData");
+            this.appView = app.getPath("appData");
+
+        }
+        //Else create windows specific files and run code which doesn't involve electron or windows. 
+        else {
+
+            this.roamingFolder = Windows.Storage.ApplicationData.current.roamingFolder;
+            this.appView = Windows.UI.ViewManagement.ApplicationView.getForCurrentView();
+
+        }
         this.startPage = "https://microsoftedge.github.io/JSBrowser/";
     }
 
@@ -26,7 +55,7 @@
         constructor: Browser,
 
         // Simple event management - listen for a particular event
-        on (type, listener) {
+        on(type, listener) {
             let listeners = this[EVENT_SYMBOL][type] || (this[EVENT_SYMBOL][type] = []);
 
             if (listeners.indexOf(listener) < 0) {
@@ -36,7 +65,7 @@
         },
 
         // Simple event management - stop listening for a particular event
-        off (type, listener) {
+        off(type, listener) {
             let listeners = this[EVENT_SYMBOL][type],
                 index = listeners ? listeners.indexOf(listener) : -1;
 
@@ -47,15 +76,15 @@
         },
 
         // Simple event management - trigger a particular event
-        trigger (type) {
+        trigger(type) {
             let event = { type };
             let listeners = this[EVENT_SYMBOL][type] || [];
-
+            //error - need to fix
             listeners.forEach(listener => listener.call(this, event));
             return this;
         }
     };
-
+    
     // Create browser instance
     let browser = new Browser;
 
@@ -67,6 +96,7 @@
 
         // The normal webview created via HTML is in proc.
         // Replace it with a webview created via new MSWebView for an out of proc webview.
+        
 
 
         Object.assign(this, {
@@ -112,13 +142,23 @@
         try {
             if (JSON.parse(localStorage["newTabSetting"])) {
                 let newTab = window.open("newTab.html?first", null, "msHideView=yes");
-                Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(newTab));
+                if (isElectron()) {
+
+                }
+                else {
+                    Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(newTab))
+                }
                 window.addEventListener("message", messageEvent => {
                     if (messageEvent.data.newTab) {
                         let newTab = window.open("newTab.html", null, "msHideView=yes");
-                        Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(newTab)).then(() => {
-                            Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(messageEvent.source));
-                        });
+                        if (isElectron()) {
+
+                        }
+                        else {
+                            Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(newTab)).then(() => {
+                                Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(messageEvent.source));
+                            });
+                        }
                     }
                 });
             }
@@ -131,7 +171,12 @@
             let oldSrc = browser.currentUrl;
             const webviewParent = webview.parentElement;
             webviewParent.removeChild(webview);
-            webview = new MSWebView();
+            if (isElectron()) {
+
+            }
+            else {
+                webview = new MSWebView();
+            }
             Object.assign(this, {
                 "webview": webview
             });
@@ -168,8 +213,12 @@
         };
 
         // Call this immediately to switch to out of proc webview.
-        this.replaceWebView();
+        if (isElectron()) {
 
+        }
+        else {
+            this.replaceWebView();
+        }
 
         // Apply the fullscreen mode
         this.applyFullscreenMode = state => {
@@ -258,6 +307,7 @@
 
                 // Adjust AppBar colors to match new background color
                 this.setOpenMenuAppBarColors();
+                
             });
         };
 
@@ -276,11 +326,13 @@
         this.backButton.disabled = true;
         this.forwardButton.disabled = true;
 
-        // Use a proxy to workaround a WinRT issue with Object.assign
-        this.titleBar = new Proxy(this.appView.titleBar, {
-            "get": (target, key) => target[key],
-            "set": (target, key, value) => (target[key] = value, true)
-        });
+        if (!isElectron()) {
+            // Use a proxy to workaround a WinRT issue with Object.assign
+            this.titleBar = new Proxy(this.appView.titleBar, {
+                "get": (target, key) => target[key],
+                "set": (target, key, value) => (target[key] = value, true)
+            });
+        }
 
         // Listen for fullscreen mode hot keys
         addEventListener("keydown", e => {
@@ -290,8 +342,10 @@
             }
         });
 
-        // Listen for a change in fullscreen mode
-        this.appView.addEventListener("visibleboundschanged", () => this.applyFullscreenMode());
+        if (!isElectron()) {
+            // Listen for a change in fullscreen mode
+            this.appView.addEventListener("visibleboundschanged", () => this.applyFullscreenMode());
+        }
 
         // Listen for the webview zoom control changes.
         this.webviewZoom.addEventListener("change", () => this.applyWebviewZoom());
@@ -310,9 +364,12 @@
         this.trigger("newWebview");
 
         // Navigate to the start page
-        this.navigateTo(this.startPage);
+        if (!isElectron()) {
+            this.navigateTo(this.startPage);
+        }
     }.bind(browser));
 
     // Export `browser`
     window.browser = browser;
+
 })();

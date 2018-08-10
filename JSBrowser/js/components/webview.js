@@ -1,7 +1,32 @@
 ﻿browser.on("newWebview", function () {
     "use strict";
 
-    const URI = Windows.Foundation.Uri;
+    const webview = document.querySelector('webview');
+    webview.addEventListener('dom-ready', () => {
+        webview.openDevTools();
+    })
+
+    var electron, app;
+
+    function isElectron() {
+
+        if (typeof require !== 'function') return false;
+        if (typeof window !== 'object') return false;
+        try {
+            electron = require('electron');
+            app = electron.remote.app;
+        } catch (e) {
+            return false;
+        }
+        if (typeof electron !== 'object') return false;
+        return true;
+
+    }
+    var URI;
+
+    if (!isElectron()) {
+        URI = Windows.Foundation.Uri;
+    }
 
     // At times knowing only the current navigation event firing from the webview is not enough.
     // It is sometimes useful to know all of the navigation events that have fired for the current navigation.
@@ -114,30 +139,53 @@
     this.navigationEventState = new NavigationEventState(this.webview);
 
     // Listen for the navigation start
-    this.webview.addEventListener("MSWebViewNavigationStarting", e => {
-        this.loading = true;
+    if (!isElectron()) {
+        this.webview.addEventListener("MSWebViewNavigationStarting", e => { // run similar code for electron event listener
+            this.loading = true;
 
-        // Update the address bar
-        this.currentUrl = e.uri;
-        this.updateAddressBar(this.currentUrl);
+            // Update the address bar
+            this.currentUrl = e.uri;
+            this.updateAddressBar(this.currentUrl);
 
-        console.log(`Navigating to ${this.currentUrl}`);
+            console.log(`Navigating to ${this.currentUrl}`);
 
-        this.hideFavicon();
-        this.toggleProgressRing(true);
+            this.hideFavicon();
+            this.toggleProgressRing(true);
 
-        // Show the stop button
-        this.showStop();
+            // Show the stop button
+            this.showStop();
 
-        // Create the C++ Windows Runtime Component
-        let winRTObject = new NativeListener.KeyHandler();
+            // Create the C++ Windows Runtime Component
+            let winRTObject = new NativeListener.KeyHandler();
 
-        // Listen for an app notification from the WinRT object
-        winRTObject.onnotifyappevent = e => this.handleShortcuts(e.target);
+            // Listen for an app notification from the WinRT object
+            winRTObject.onnotifyappevent = e => this.handleShortcuts(e.target);
 
-        // Expose the native WinRT object on the page's global object
-        this.webview.addWebAllowedObject("NotifyApp", winRTObject);
-    });
+            // Expose the native WinRT object on the page's global object
+            this.webview.addWebAllowedObject("NotifyApp", winRTObject);
+        });
+    }
+    else {
+        this.webview.addEventListener("did-start-loading", e => {
+
+            // Update the address bar
+            this.currentUrl = webview.getURL();
+
+            // TODO: Uncomment after fixing address-bar.js
+            //this.updateAddressBar(this.currentUrl);
+
+            console.log(`Navigating to ${this.currentUrl}`);
+
+            // TODO: Uncomment after fixing address-bar.js
+            //this.hideFavicon();
+            //this.toggleProgressRing(true);
+
+            // Show the stop button
+            this.showStop();
+
+
+        });
+    }
 
     // Inject fullscreen mode hot key listener into the WebView with every page load
     this.webview.addEventListener("MSWebViewDOMContentLoaded", () => {
@@ -154,21 +202,43 @@
     });
 
     // Listen for the navigation completion
-    this.webview.addEventListener("MSWebViewNavigationCompleted", e => {
-        this.loading = false;
-        this.toggleProgressRing(false);
-        this.getFavicon(e.uri);
+    if (!isElectron()) {
+        this.webview.addEventListener("MSWebViewNavigationCompleted", e => { // run similar code for electron event listener
+            this.loading = false;
+            this.toggleProgressRing(false);
+            this.getFavicon(e.uri);
 
-        // Update the page title
-        this.appView.title = this.webview.documentTitle;
+            // Update the page title
+            this.title = webview.getURL();
+            this.appView.title = this.webview.documentTitle;
 
-        // Show the refresh button
-        this.showRefresh();
+            // Show the refresh button
+            this.showRefresh();
 
-        // Update the navigation state
-        this.updateNavState();
-        
-    });
+            //Update the Navigation State
+            this.updateNavState();
+
+        });
+    }
+    else {
+        this.webview.addEventListener("did-finish-load", e => {
+            // TODO: Uncomment after fixing address-bar.js
+            //this.toggleProgressRing(false);
+            //this.getFavicon(e.uri);
+
+            //Update the page title
+            //webview.documentTitle = webview.getURL();
+            //this.appView.title = this.webview.documentTitle;
+
+            //show the refresh button
+            this.showRefresh();
+
+            // Update the navigation state
+            this.updateNavState();
+
+        })
+    }
+
 
     this.navigationEventState.addEventListener("aggregateNavigationCompleted", e => {
         if (!e.isSuccess && !e.hasContent) {
@@ -203,5 +273,7 @@
         if (e.permissionRequest.type === "geolocation") {
             e.permissionRequest.allow();
         }
-    }); 
- });
+    });
+});
+
+

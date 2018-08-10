@@ -2,50 +2,69 @@
     "use strict";
 
     // Retrieve the list of favorites and add them to the UI
-    this.readFavorites = () => {
-        this.roamingFolder
-            .getFileAsync("favorites.json")
-            .then(favFile => Windows.Storage.FileIO.readTextAsync(favFile))
-            .done(
-                favJSON => {
-                    // Read the list of favorites from file
-                    let updatedFavs = favJSON ? JSON.parse(favJSON) : [];
-                    let favList = [...document.querySelectorAll("#favMenu .favorite")];
+    var electron, app;
 
-                    this.favorites.clear();
-                    updatedFavs.forEach(pair => this.favorites.set(pair[0], pair[1]));
+    function isElectron() {
 
-                    // Clear the favorites menu
-                    favList.forEach(favNode => favNode.remove());
+        if (typeof require !== 'function') return false;
+        if (typeof window !== 'object') return false;
+        try {
+            electron = require('electron');
+            app = electron.remote.app;
+        } catch (e) {
+            return false;
+        }
+        if (typeof electron !== 'object') return false;
+        return true;
 
-                    // Propagate the favorites menu with the new list
-                    let i = 1;
-                    for (let pair of this.favorites) {
-                        let alt = document.createElement("div");
-                        let delay = .06 + .03 * i++;
-                        let favEntry = document.createElement("a");
-                        let url = pair[0];
+    }
+    var URI;
 
-                        favEntry.className = "favorite";
-                        favEntry.style.transitionDelay = `${delay}s`;
-                        favEntry.textContent = pair[1].title;
+    if (!isElectron()) {
+        this.readFavorites = () => {
+            this.roamingFolder
+                .getFileAsync("favorites.json")
+                .then(favFile => Windows.Storage.FileIO.readTextAsync(favFile))
+                .done(
+                    favJSON => {
+                        // Read the list of favorites from file
+                        let updatedFavs = favJSON ? JSON.parse(favJSON) : [];
+                        let favList = [...document.querySelectorAll("#favMenu .favorite")];
 
-                        alt.className = "url";
-                        alt.textContent = url;
-                        favEntry.appendChild(alt);
+                        this.favorites.clear();
+                        updatedFavs.forEach(pair => this.favorites.set(pair[0], pair[1]));
 
-                        favEntry.addEventListener("click", () => {
-                            this.closeMenu();
-                            this.navigateTo(url);
-                        });
+                        // Clear the favorites menu
+                        favList.forEach(favNode => favNode.remove());
 
-                        this.favList.appendChild(favEntry);
-                    }
-                },
-                e => {}
-            );
-    };
+                        // Propagate the favorites menu with the new list
+                        let i = 1;
+                        for (let pair of this.favorites) {
+                            let alt = document.createElement("div");
+                            let delay = .06 + .03 * i++;
+                            let favEntry = document.createElement("a");
+                            let url = pair[0];
 
+                            favEntry.className = "favorite";
+                            favEntry.style.transitionDelay = `${delay}s`;
+                            favEntry.textContent = pair[1].title;
+
+                            alt.className = "url";
+                            alt.textContent = url;
+                            favEntry.appendChild(alt);
+
+                            favEntry.addEventListener("click", () => {
+                                this.closeMenu();
+                                this.navigateTo(url);
+                            });
+
+                            this.favList.appendChild(favEntry);
+                        }
+                    },
+                    e => { }
+                );
+        };
+    }
     // Save the list of favorites to file
     this.saveFavorites = () => {
         this.roamingFolder
@@ -79,5 +98,8 @@
     });
 
     // Refresh the data
-    this.readFavorites();
+
+    if (!isElectron()) {
+        this.readFavorites();
+    }
 });
