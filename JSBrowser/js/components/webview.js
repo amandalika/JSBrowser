@@ -22,10 +22,13 @@
         return true;
 
     }
-    var URI;
+    var URI, host;
 
     if (!isElectron()) {
         URI = Windows.Foundation.Uri;
+    }
+    else {
+         host = window.location.host;
     }
 
     // At times knowing only the current navigation event firing from the webview is not enough.
@@ -167,15 +170,7 @@
     }
     else {
         this.webview.addEventListener("did-start-loading", e => {
-
-            // Update the address bar
-            this.currentUrl = webview.getURL();
-
-            // TODO: Uncomment after fixing address-bar.js
-            //this.updateAddressBar(this.currentUrl);
-
-            console.log(`Navigating to ${this.currentUrl}`);
-
+            
             // TODO: Uncomment after fixing address-bar.js
             //this.hideFavicon();
             //this.toggleProgressRing(true);
@@ -187,6 +182,17 @@
         });
     }
 
+    this.webview.addEventListener("dom-ready", e => {
+
+        // Update the address bar
+        this.currentUrl = webview.getURL();
+
+        // TODO: Uncomment after fixing address-bar.js
+        this.webview.updateAddressBar(this.currentUrl);
+
+        console.log(`Navigating to ${this.currentUrl}`);
+
+    })
     // Inject fullscreen mode hot key listener into the WebView with every page load
     this.webview.addEventListener("MSWebViewDOMContentLoaded", () => {
         let asyncOp = this.webview.invokeScriptAsync("eval", `
@@ -227,7 +233,6 @@
             //this.getFavicon(e.uri);
 
             //Update the page title
-            //webview.documentTitle = webview.getURL();
             //this.appView.title = this.webview.documentTitle;
 
             //show the refresh button

@@ -4,6 +4,10 @@
     const EMPTY_FAVICON = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIj8+Cjxzdmcgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogPCEtLSBDcmVhdGVkIHdpdGggU1ZHLWVkaXQgLSBodHRwOi8vc3ZnLWVkaXQuZ29vZ2xlY29kZS5jb20vIC0tPgogPGc+CiAgPHRpdGxlPkxheWVyIDE8L3RpdGxlPgogIDx0ZXh0IHhtbDpzcGFjZT0icHJlc2VydmUiIHk9IjI3LjUiIHg9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBzdHJva2Utd2lkdGg9IjAiIHN0cm9rZS1saW5lam9pbj0ibnVsbCIgc3Ryb2tlLWxpbmVjYXA9Im51bGwiIHN0cm9rZS1kYXNoYXJyYXk9Im51bGwiIHN0cm9rZT0iIzAwMDAwMCIgZmlsbD0iIzAwMDAwMCIgZm9udC1zaXplPSIxNXB4IiBmb250LWZhbWlseT0iU2Vnb2UgTURMMiBBc3NldHMiIGlkPSJzdmdfMyI+7p+DPC90ZXh0PgogPC9nPgo8L3N2Zz4=";
     const LOC_CACHE = new Map;
     const RE_VALIDATE_URL = /^[-:.&#+()[\]$'*;@~!,?%=\/\w]+$/;
+    const webview = document.querySelector('webview');
+    webview.addEventListener('dom-ready', () => {
+        webview.openDevTools();
+    })
     var electron, app;
 
     function isElectron() {
@@ -20,13 +24,13 @@
         return true;
 
     }
-    var URI;
+    var URI, host, path, query;
 
     if (!isElectron()) {
         URI = Windows.Foundation.Uri;
     }
     else {
-
+        // host = window.location.host;
     }
 
     let faviconFallback = [];
@@ -52,11 +56,23 @@
 
     // Navigate to the specified absolute URL
     function navigate(webview, url, silent) {
-        let resp = attempt(() => webview.navigate(url));
-        let result = !(resp instanceof Error);
+        var result;
+        if (isElectron()) {
+            let resp = attempt(() => webview.loadURL(url));
+            result = !(resp instanceof Error);
 
-        if (!silent && !result) {
-            console.error(`Unable to navigate to ${url}: ${resp.message}`);
+            if (!silent && !result) {
+                console.error(`Unable to navigate to ${url}: ${resp.message}`);
+            }
+
+        }
+        else {
+            let resp = attempt(() => webview.navigate(url));
+            result = !(resp instanceof Error);
+
+            if (!silent && !result) {
+                console.error(`Unable to navigate to ${url}: ${resp.message}`);
+            }
         }
         return result;
     }
@@ -161,50 +177,61 @@
     };
 
     // Update the address bar with the given text and remove focus
-    this.updateAddressBar = text => {
-        this.urlInput.value = text;
-        this.urlInput.blur();
-    };
-
-    // Use the fallback list if a favicon fails to load, otherwise hide the favicon
-    this.favicon.addEventListener("error", () => {
-        if (!this.favicon.src.startsWith("ms-appx://")) {
-            if (faviconFallback.length) {
-                this.setFavicon(faviconFallback.shift());
-            }
-            else {
-                this.hideFavicon();
-            }
+    if (!isElectron()) {
+        this.updateAddressBar = text => {
+            this.urlInput.value = text;
+            this.urlInput.blur();
+        };
+    }
+    else {
+        this.webview.updateAddressBar = text => {
+            this.urlInput.value = text;
+            this.urlInput.blur();
         }
-    });
- 
-    // Listen for a successful favicon load
-    this.favicon.addEventListener("load", e => {
-        faviconFallback.length = 0;
-        this.faviconLocs.set(new URI(this.currentUrl).host, e.target.src);
-    });
+    } 
+    
 
-    // Listen for the tweet button
-    this.tweetIcon.addEventListener("click", () => {
-        let domain = (this.currentUrl && new URI(this.currentUrl).host) || "microsoft.com";
-        let path = "https://twitter.com/intent/tweet";
-        let tags = ["Windows", "UWP"].map(encodeURIComponent);
-        let text = encodeURIComponent(`I visited ${domain} in a browser built with HTML and JavaScript \u{1F332}. Find out more here:`);
-        let url = encodeURIComponent("http://bit.ly/1IDpBVA");
-        this.navigateTo(`${path}?hashtags=${tags.join()}&text=${text}&url=${url}`);
+        // Use the fallback list if a favicon fails to load, otherwise hide the favicon
+        this.favicon.addEventListener("error", () => {
+            if (!this.favicon.src.startsWith("ms-appx://")) {
+                if (faviconFallback.length) {
+                    this.setFavicon(faviconFallback.shift());
+                }
+                else {
+                    this.hideFavicon();
+                }
+            }
+        });
+
+        // Listen for a successful favicon load
+        this.favicon.addEventListener("load", e => {
+            faviconFallback.length = 0;
+            //this.faviconLocs.set(new URI(this.currentUrl).host, e.target.src);
+        });
+
+        // Listen for the tweet button
+        this.tweetIcon.addEventListener("click", () => {
+            let domain = (this.currentUrl && new URI(this.currentUrl).host) || "microsoft.com";
+            let path = "https://twitter.com/intent/tweet";
+            let tags = ["Windows", "UWP"].map(encodeURIComponent);
+            let text = encodeURIComponent(`I visited ${domain} in a browser built with HTML and JavaScript \u{1F332}. Find out more here:`);
+            let url = encodeURIComponent("http://bit.ly/1IDpBVA");
+            this.navigateTo(`${path}?hashtags=${tags.join()}&text=${text}&url=${url}`);
+        });
+
+
+
+        // Listen for the loss of focus on the address bar to unselect the text
+        this.urlInput.addEventListener("blur", () => getSelection().removeAllRanges());
+
+        // Listen for focus on the address bar to auto-select the text
+        // Use `setImmediate` to prevent the text from being immediately unselected
+        this.urlInput.addEventListener("focus", e => setImmediate(() => e.target.select()));
+
+        // Listen for the Enter key in the address bar to navigate to the specified URL
+        this.urlInput.addEventListener("keypress", e => {
+            if (e.keyCode === 13) {
+                this.navigateTo(urlInput.value.trim());
+            }
+        });
     });
-
-    // Listen for the loss of focus on the address bar to unselect the text
-    this.urlInput.addEventListener("blur", () => getSelection().removeAllRanges());
-
-    // Listen for focus on the address bar to auto-select the text
-    // Use `setImmediate` to prevent the text from being immediately unselected
-    this.urlInput.addEventListener("focus", e => setImmediate(() => e.target.select()));
-
-    // Listen for the Enter key in the address bar to navigate to the specified URL
-    this.urlInput.addEventListener("keypress", e => {
-        if (e.keyCode === 13) {
-            this.navigateTo(urlInput.value.trim());
-        }
-    });
-});

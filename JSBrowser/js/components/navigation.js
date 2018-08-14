@@ -72,8 +72,7 @@
     else {
         this.updateNavState = () => {
             this.backButton.disabled = !this.webview.canGoBack();
-            console.log("updating Nav");
-            this.forwardButton.disabled= !this.webview.canGoForward();
+            this.forwardButton.disabled = !this.webview.canGoForward();
         }
     }
 
