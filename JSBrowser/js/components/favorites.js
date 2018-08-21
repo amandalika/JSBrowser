@@ -1,7 +1,6 @@
 ﻿browser.on("init", function () {
     "use strict";
 
-    // Retrieve the list of favorites and add them to the UI
     var electron, app;
 
     function isElectron() {
@@ -18,8 +17,10 @@
         return true;
 
     }
-    var URI;
 
+
+
+    // Retrieve the list of favorites and add them to the UI
     if (!isElectron()) {
         this.readFavorites = () => {
             this.roamingFolder
@@ -98,7 +99,6 @@
     });
 
     // Refresh the data
-
     if (!isElectron()) {
         this.readFavorites();
     }

@@ -1,10 +1,7 @@
 ﻿browser.on("newWebview", function () {
     "use strict";
 
-    const webview = document.querySelector('webview');
-    webview.addEventListener('dom-ready', () => {
-        webview.openDevTools();
-    })
+    var webview;
 
     var electron, app;
 
@@ -25,10 +22,11 @@
     var URI, host;
 
     if (!isElectron()) {
-        URI = Windows.Foundation.Uri;
+        const URI = Windows.Foundation.Uri;
     }
     else {
-         host = window.location.host;
+        host = window.location.host;
+        webview = document.querySelector('webview');
     }
 
     // At times knowing only the current navigation event firing from the webview is not enough.
@@ -72,7 +70,6 @@
         const dispatch = (name, args) => {
             eventNameToHandlersMap[name].forEach(handler => handler.call(null, args));
         };
-
         this.id = 0;
         const init = () => {
             ++this.id;
@@ -88,15 +85,12 @@
             init();
             this.navigationStarting = e;
         });
-
         webview.addEventListener("MSWebViewContentLoading", e => {
             this.contentLoading = e;
         })
-
         webview.addEventListener("MSWebViewDOMContentLoaded", e => {
             this.domContentLoaded = e;
         });
-
         webview.addEventListener("MSWebViewNavigationCompleted", e => {
             const matchId = this.id;
             if (!this.navigationCompleted1) {
@@ -138,14 +132,12 @@
             }
         });
     }
-
     this.navigationEventState = new NavigationEventState(this.webview);
 
     // Listen for the navigation start
     if (!isElectron()) {
-        this.webview.addEventListener("MSWebViewNavigationStarting", e => { // run similar code for electron event listener
+        this.webview.addEventListener("MSWebViewNavigationStarting", e => {
             this.loading = true;
-
             // Update the address bar
             this.currentUrl = e.uri;
             this.updateAddressBar(this.currentUrl);
@@ -162,6 +154,7 @@
             let winRTObject = new NativeListener.KeyHandler();
 
             // Listen for an app notification from the WinRT object
+
             winRTObject.onnotifyappevent = e => this.handleShortcuts(e.target);
 
             // Expose the native WinRT object on the page's global object
@@ -170,7 +163,7 @@
     }
     else {
         this.webview.addEventListener("did-start-loading", e => {
-            
+
             // TODO: Uncomment after fixing address-bar.js
             //this.hideFavicon();
             //this.toggleProgressRing(true);
@@ -182,17 +175,18 @@
         });
     }
 
-    this.webview.addEventListener("dom-ready", e => {
+    if (isElectron()) {
+        this.webview.addEventListener("dom-ready", e => {
 
-        // Update the address bar
-        this.currentUrl = webview.getURL();
+            // Update the address bar
+            this.currentUrl = webview.getURL();
 
-        // TODO: Uncomment after fixing address-bar.js
-        this.webview.updateAddressBar(this.currentUrl);
+            // TODO: Uncomment after fixing address-bar.js
+            this.updateAddressBar(this.currentUrl);
 
-        console.log(`Navigating to ${this.currentUrl}`);
-
-    })
+            console.log(`Navigating to ${this.currentUrl}`);
+        })
+    }
     // Inject fullscreen mode hot key listener into the WebView with every page load
     this.webview.addEventListener("MSWebViewDOMContentLoaded", () => {
         let asyncOp = this.webview.invokeScriptAsync("eval", `
@@ -215,7 +209,7 @@
             this.getFavicon(e.uri);
 
             // Update the page title
-            this.title = webview.getURL();
+
             this.appView.title = this.webview.documentTitle;
 
             // Show the refresh button
@@ -280,5 +274,6 @@
         }
     });
 });
+
 
 

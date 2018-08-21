@@ -6,6 +6,7 @@
 
     // The event symbol used to store event data
     const EVENT_SYMBOL = Symbol("events");
+
     var electron, app;
 
     function isElectron() {
@@ -79,12 +80,11 @@
         trigger(type) {
             let event = { type };
             let listeners = this[EVENT_SYMBOL][type] || [];
-            //error - need to fix
             listeners.forEach(listener => listener.call(this, event));
             return this;
         }
     };
-    
+
     // Create browser instance
     let browser = new Browser;
 
@@ -96,7 +96,7 @@
 
         // The normal webview created via HTML is in proc.
         // Replace it with a webview created via new MSWebView for an out of proc webview.
-        
+
 
 
         Object.assign(this, {
@@ -142,19 +142,13 @@
         try {
             if (JSON.parse(localStorage["newTabSetting"])) {
                 let newTab = window.open("newTab.html?first", null, "msHideView=yes");
-                if (isElectron()) {
-
-                }
-                else {
+                if (!isElectron()) {
                     Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(newTab))
                 }
                 window.addEventListener("message", messageEvent => {
                     if (messageEvent.data.newTab) {
                         let newTab = window.open("newTab.html", null, "msHideView=yes");
-                        if (isElectron()) {
-
-                        }
-                        else {
+                        if (!isElectron()) {
                             Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(newTab)).then(() => {
                                 Windows.UI.ViewManagement.ApplicationViewSwitcher.tryShowAsStandaloneAsync(MSApp.getViewId(messageEvent.source));
                             });
@@ -171,10 +165,7 @@
             let oldSrc = browser.currentUrl;
             const webviewParent = webview.parentElement;
             webviewParent.removeChild(webview);
-            if (isElectron()) {
-
-            }
-            else {
+            if (!isElectron()) {
                 webview = new MSWebView();
             }
             Object.assign(this, {
@@ -213,10 +204,7 @@
         };
 
         // Call this immediately to switch to out of proc webview.
-        if (isElectron()) {
-
-        }
-        else {
+        if (!isElectron()) {
             this.replaceWebView();
         }
 
@@ -307,7 +295,7 @@
 
                 // Adjust AppBar colors to match new background color
                 this.setOpenMenuAppBarColors();
-                
+
             });
         };
 
@@ -364,9 +352,9 @@
         this.trigger("newWebview");
 
         // Navigate to the start page
-        if (!isElectron()) {
-            this.navigateTo(this.startPage);
-        }
+
+        this.navigateTo(this.startPage);
+
     }.bind(browser));
 
     // Export `browser`

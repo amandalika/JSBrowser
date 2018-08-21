@@ -1,9 +1,10 @@
 ﻿browser.on("init", function () {
     "use strict";
-    const webview = document.querySelector('webview');
+
+    /* const webview = document.querySelector('webview');
     webview.addEventListener('dom-ready', () => {
         webview.openDevTools();
-    })
+    }) */
 
     var electron, app;
 
@@ -22,6 +23,7 @@
 
     }
 
+
     // Show the refresh button
     this.showRefresh = () => {
         this.stopButton.classList.remove("stopButton");
@@ -39,13 +41,14 @@
     // Listen for the stop/refresh button to stop navigation/refresh the page
     this.stopButton.addEventListener("click", () => {
         if (!isElectron()) {
+
             if (this.loading) {
-                this.webview.stop(); // WWA-only API
+                this.webview.stop();
                 this.toggleProgressRing(false);
                 this.showRefresh();
             }
             else {
-                this.webview.refesh(); // WWA-only API
+                this.webview.refresh();
             }
         }
         else {
@@ -58,9 +61,8 @@
                 this.webview.reload();
             }
         }
+
     });
-
-
 
     // Update the navigation state
     if (!isElectron()) {
@@ -90,4 +92,5 @@
     else {
         this.forwardButton.addEventListener("click", () => this.webview.goForward());
     }
+
 });
