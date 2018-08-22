@@ -22,7 +22,7 @@
     var URI, host;
 
     if (!isElectron()) {
-        const URI = Windows.Foundation.Uri;
+        URI = Windows.Foundation.Uri;
     }
     else {
         host = window.location.host;
@@ -162,31 +162,24 @@
         });
     }
     else {
-        this.webview.addEventListener("did-start-loading", e => {
-
-            // TODO: Uncomment after fixing address-bar.js
-            //this.hideFavicon();
-            //this.toggleProgressRing(true);
-
-            // Show the stop button
-            this.showStop();
-
-
-        });
-    }
-
-    if (isElectron()) {
         this.webview.addEventListener("dom-ready", e => {
+            this.toggleProgressRing(true);
+
+            this.showStop();
 
             // Update the address bar
             this.currentUrl = webview.getURL();
 
-            // TODO: Uncomment after fixing address-bar.js
-            this.updateAddressBar(this.currentUrl);
+            this.webview.updateAddressBar(this.currentUrl);
 
             console.log(`Navigating to ${this.currentUrl}`);
+
         })
     }
+
+
+
+
     // Inject fullscreen mode hot key listener into the WebView with every page load
     this.webview.addEventListener("MSWebViewDOMContentLoaded", () => {
         let asyncOp = this.webview.invokeScriptAsync("eval", `
@@ -203,13 +196,12 @@
 
     // Listen for the navigation completion
     if (!isElectron()) {
-        this.webview.addEventListener("MSWebViewNavigationCompleted", e => { // run similar code for electron event listener
+        this.webview.addEventListener("MSWebViewNavigationCompleted", e => {
             this.loading = false;
             this.toggleProgressRing(false);
             this.getFavicon(e.uri);
 
             // Update the page title
-
             this.appView.title = this.webview.documentTitle;
 
             // Show the refresh button
@@ -222,12 +214,12 @@
     }
     else {
         this.webview.addEventListener("did-finish-load", e => {
-            // TODO: Uncomment after fixing address-bar.js
-            //this.toggleProgressRing(false);
-            //this.getFavicon(e.uri);
+
+            this.toggleProgressRing(false);
+           // this.getFavicon(e.uri);
 
             //Update the page title
-            //this.appView.title = this.webview.documentTitle;
+           // this.appView.title = this.webview.documentTitle;
 
             //show the refresh button
             this.showRefresh();

@@ -1,11 +1,7 @@
 ﻿browser.on("init", function () {
     "use strict";
 
-    /* const webview = document.querySelector('webview');
-    webview.addEventListener('dom-ready', () => {
-        webview.openDevTools();
-    }) */
-
+    var webview;
     var electron, app;
 
     function isElectron() {
@@ -23,6 +19,9 @@
 
     }
 
+    if (isElectron()) {
+        webview = document.querySelector('webview');
+    }
 
     // Show the refresh button
     this.showRefresh = () => {

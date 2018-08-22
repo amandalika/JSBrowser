@@ -5,11 +5,8 @@
     const LOC_CACHE = new Map;
     const RE_VALIDATE_URL = /^[-:.&#+()[\]$'*;@~!,?%=\/\w]+$/;
 
-    
-    var webview;
 
-    var electron, app;
-    var URI;
+    var webview, electron, app, URI;
 
     function isElectron() {
 
@@ -25,19 +22,17 @@
         return true;
 
     }
-    
 
-    if (isElectron()) {
-        webview = document.querySelector('webview');
-    }
+    var host;
 
     if (!isElectron()) {
         URI = Windows.Foundation.Uri;
     }
-
-    // else {
-    //     host = window.location.host;
-    // }
+    else {
+        URI = window.location;
+        webview = document.querySelector('webview');
+        
+    }
 
 
     let faviconFallback = [];
@@ -65,7 +60,8 @@
     function navigate(webview, url, silent) {
         var result;
         if (isElectron()) {
-            let resp = attempt(() => webview.navigate(url));
+
+            let resp = attempt(() => webview.loadURL(url));
             result = !(resp instanceof Error);
 
             if (!silent && !result) {
@@ -184,10 +180,20 @@
     };
 
     // Update the address bar with the given text and remove focus
-    this.updateAddressBar = text => {
-        this.urlInput.value = text;
-        this.urlInput.blur();
-    };
+    if (!isElectron()) {
+        this.updateAddressBar = text => {
+            this.urlInput.value = text;
+            this.urlInput.blur();
+        };
+    }
+    else {
+        this.webview.updateAddressBar = text => {
+            this.urlInput.value = text;
+            this.urlInput.blur();
+        }
+    }
+
+
 
     // Use the fallback list if a favicon fails to load, otherwise hide the favicon
     this.favicon.addEventListener("error", () => {
@@ -204,7 +210,7 @@
     // Listen for a successful favicon load
     this.favicon.addEventListener("load", e => {
         faviconFallback.length = 0;
-        this.faviconLocs.set(new URI(this.currentUrl).host, e.target.src);
+        // this.faviconLocs.set(new URI(this.currentUrl).host, e.target.src);
     });
 
     // Listen for the tweet button
