@@ -167,6 +167,7 @@
 
             this.showStop();
 
+             
             // Update the address bar
             this.currentUrl = webview.getURL();
 
@@ -216,10 +217,10 @@
         this.webview.addEventListener("did-finish-load", e => {
 
             this.toggleProgressRing(false);
-           // this.getFavicon(e.uri);
+            this.getFavicon(e.uri);
 
             //Update the page title
-           // this.appView.title = this.webview.documentTitle;
+            this.title = this.webview.getTitle;
 
             //show the refresh button
             this.showRefresh();

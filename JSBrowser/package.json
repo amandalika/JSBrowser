@@ -20,6 +20,6 @@
     "electron": "^2.0.0"
   },
   "dependencies": {
-    "npm": "^6.3.0"
+    "npm": "^6.4.0"
   }
 }

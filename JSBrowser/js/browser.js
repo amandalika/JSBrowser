@@ -352,9 +352,9 @@
         this.trigger("newWebview");
 
         // Navigate to the start page
-
-        this.navigateTo(this.startPage);
-
+        if (!isElectron()) {
+            this.navigateTo(this.startPage);
+        }
     }.bind(browser));
 
     // Export `browser`

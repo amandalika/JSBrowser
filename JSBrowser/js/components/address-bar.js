@@ -29,9 +29,8 @@
         URI = Windows.Foundation.Uri;
     }
     else {
-        URI = window.location;
         webview = document.querySelector('webview');
-        
+
     }
 
 
@@ -58,14 +57,26 @@
 
     // Navigate to the specified absolute URL
     function navigate(webview, url, silent) {
+
+        var Url;
+
         var result;
         if (isElectron()) {
 
-            let resp = attempt(() => webview.loadURL(url));
+            if (location.protocol == 'https:') {
+                Url = url;
+
+            }
+            else {
+                Url = 'https://' + url;
+
+            }
+
+            let resp = attempt(() => webview.loadURL(Url));
             result = !(resp instanceof Error);
 
             if (!silent && !result) {
-                console.error(`Unable to navigate to ${url}: ${resp.message}`);
+                console.error(`Unable to navigate to ${Url}: ${resp.message}`);
             }
         }
         else {
@@ -82,7 +93,16 @@
 
     // Show the favicon if available
     this.getFavicon = loc => {
-        let host = new URI(loc).host;
+        var host;
+        if (!isElectron()) {
+            host = new URI(loc).host;
+        }
+        else {
+            var parser = document.createElement('a');
+
+            parser.href = loc;
+            host = parser.hostname;
+        }
 
         // Exit for cached ico location
         if (this.faviconLocs.has(host)) {
@@ -95,32 +115,52 @@
             }
             return;
         }
-        // Asynchronously check for a favicon in the web page markup
-        let asyncOp = this.webview.invokeScriptAsync("eval", `
+        if (!isElectron()) {
+            // Asynchronously check for a favicon in the web page markup
+            let asyncOp = this.webview.invokeScriptAsync("eval", `
             JSON.stringify(Array.from(document.getElementsByTagName('link'))
                 .filter(link => link.rel.includes('icon'))
                 .map(link => link.href))
         `);
-        asyncOp.oncomplete = e => {
-            // Parse result add fallbacks
-            faviconFallback = JSON.parse(e.target.result);
+            asyncOp.oncomplete = e => {
+                // Parse result add fallbacks
+                faviconFallback = JSON.parse(e.target.result);
 
-            let protocol = loc.split(":")[0];
-            if (protocol.startsWith("http") || !host) {
-                loc = `${protocol}://${host}/favicon.ico`;
-                faviconFallback.push(loc);
-            }
+                let protocol = loc.split(":")[0];
+                if (protocol.startsWith("http") || !host) {
+                    loc = `${protocol}://${host}/favicon.ico`;
+                    faviconFallback.push(loc);
+                }
 
-            faviconFallback.push(EMPTY_FAVICON);
-            this.setFavicon(faviconFallback.shift());
-        };
-        asyncOp.onerror = e => {
-            console.error(`Unable to find favicon in markup: ${e.message}`);
-            faviconFallback = [];
-            this.setFavicon(EMPTY_FAVICON);
-        };
-        asyncOp.start();
-    };
+                faviconFallback.push(EMPTY_FAVICON);
+                this.setFavicon(faviconFallback.shift());
+            };
+            asyncOp.onerror = e => {
+                console.error(`Unable to find favicon in markup: ${e.message}`);
+                faviconFallback = [];
+                this.setFavicon(EMPTY_FAVICON);
+            };
+            asyncOp.start();
+        }
+        else {
+            this.webview.executeJavaScript(`JSON.stringify(Array.from(document.getElementsByTagName('link'))
+                .filter(link => link.rel.includes('icon'))
+                .map(link => link.href))`, false, e => {
+                    // Parse result add fallbacks
+                    faviconFallback = JSON.parse(e);
+
+                    /*let protocol = loc.split(":")[0];
+                    if (protocol.startsWith("http") || !host) {
+                        loc = `${protocol}://${host}/favicon.ico`;
+                        faviconFallback.push(loc);
+                    }*/
+
+                    faviconFallback.push(EMPTY_FAVICON);
+                    this.setFavicon(faviconFallback.shift());
+                }
+            );
+        }
+    }
 
     // Hide the favicon
     this.hideFavicon = () => {
@@ -209,8 +249,10 @@
 
     // Listen for a successful favicon load
     this.favicon.addEventListener("load", e => {
-        faviconFallback.length = 0;
-        // this.faviconLocs.set(new URI(this.currentUrl).host, e.target.src);
+        if (!isElectron()) {
+            faviconFallback.length = 0;
+            this.faviconLocs.set(new URI(this.currentUrl).host, e.target.src);
+        }
     });
 
     // Listen for the tweet button
